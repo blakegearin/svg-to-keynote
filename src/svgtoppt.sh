@@ -55,7 +55,7 @@ libre="📄"
 octo="🐙"
 svg="🖌 "
 swirl="🌀"
-trash="🗑  "
+trash="🗑 "
 warn="⚠️ "
 x_mark="❌"
 
