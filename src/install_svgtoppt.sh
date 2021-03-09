@@ -57,17 +57,17 @@ print_text_options() {
 # print_text_options
 
 # EMOJIS
-beer="🍺 "
-checkmark="✅ "
-exclamation="❗️ "
-file="📁 "
-libre="📄 "
-octo="🐙 "
+beer="🍺"
+checkmark="✅"
+exclamation="❗️"
+file="📁"
+libre="📄"
+octo="🐙"
 svg="🖌 "
-swirl="🌀 "
+swirl="🌀"
 trash="🗑 "
 warn="⚠️ "
-x_mark="❌ "
+x_mark="❌"
 
 # HELPER FUNCTIONS
 echo_bold() {
