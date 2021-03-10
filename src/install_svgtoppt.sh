@@ -115,7 +115,7 @@ echo_breakpoint() {
 
   echo_debug "$2 not $3" "$3"
   local input
-  read input
+  read -r input
 
   case $input in
     "0") eval "$var_name"="$4" ;;
@@ -293,7 +293,7 @@ install_basic() (
         printf $bldylw"0 to DELETE & RE-CREATE it$txtrst or "$bldred"1 to EXIT$txtrst: "
 
         local input
-        read input
+        read -r input
 
         case $input in
           "0") echo "$trash Moving forward with delete & re-creation of $description" ;;
@@ -353,7 +353,7 @@ install_basic() (
         printf $bldylw"0 to DELETE & RE-CREATE it$txtrst or "$bldred"1 to EXIT$txtrst: "
 
         local input
-        read input
+        read -r input
         case $input in
           "0") echo "$trash Moving forward with delete & re-creation of $description" ;;
           "1") exit 1 ;;
@@ -925,7 +925,8 @@ install_complete() (
   install_homebrew() {
     local description="Homebrew"
 
-    local homebrew_install_cmd="$bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
+    local install_script='$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)'
+    local homebrew_install_cmd="$bash -c \"$install_script\""
     if [ "$quiet" != true ]; then
       echo "$beer Starting $description installation: $txtund$homebrew_install_cmd$txtrst"
     fi
@@ -939,7 +940,7 @@ install_complete() (
     fi
     local exit_code=$?
 
-    # echo_breakpoint homebrew_location "$description" "installed" 0 1
+    # echo_breakpoint exit_code "$description" "installed" 0 1
 
     if [[ $exit_code -ne 0 ]]; then
       echo_error "Installing $description failed"
@@ -956,6 +957,8 @@ install_complete() (
     local libre_office_install_cmd="$brew install --cask libreoffice"
     if [ "$quiet" != true ]; then
       echo "$libre Starting $description installation: $txtund$libre_office_install_cmd$txtrst"
+    else
+      local libre_office_install_cmd="$libre_office_install_cmd>/dev/null"
     fi
 
     if [ "$debug" == true ]; then
@@ -967,7 +970,7 @@ install_complete() (
     fi
     local exit_code=$?
 
-    # echo_breakpoint homebrew_location "$description" "installed" 0 1
+    # echo_breakpoint exit_code "$description" "installed" 0 1
 
     if [[ $exit_code -ne 0 ]]; then
       echo_error "Installing $description with Homebrew failed"
@@ -988,7 +991,13 @@ install_complete() (
     check_homebrew_installed
 
     if [[ $? -eq 0 ]]; then
-      install_homebrew
+      if [ "$quiet" != true ]; then
+        echo $yellow"$warn Homebrew needs to be installed; you will likely need to enter your password$txtrst"
+        install_homebrew
+      else
+        echo "$warn Homebrew needs to be installed; do so on your own: https://brew.sh"
+        exit 1
+      fi
     fi
 
     if [ "$debug" == true ]; then
