@@ -135,18 +135,18 @@ main() {
     # Check if SVG file exists or if it's a directory
     if [ ! -z "$first_parameter" ] && test -f $first_parameter; then
       svg_filepath=$first_parameter
-    elif test -f $input_svg; then
-      svg_filepath=$input_svg
-    elif test -f $PWD/$input_svg; then
-      svg_filepath=$PWD/$input_svg
+    elif test -f $input; then
+      svg_filepath=$input
+    elif test -f $PWD/$input; then
+      svg_filepath=$PWD/$input
     elif [ ! -z "$first_parameter" ] && [ -d $first_parameter ]; then
       svg_directory=$first_parameter
-    elif [ -d $input_svg ]; then
-      svg_directory=$input_svg
-    elif [ -d $PWD/$input_svg ]; then
-      svg_directory=$PWD/$input_svg
+    elif [ -d $input ]; then
+      svg_directory=$input
+    elif [ -d $PWD/$input ]; then
+      svg_directory=$PWD/$input
     else
-      echo_failed "find input file/directory: $input_svg"
+      echo_failed "find input file/directory: $input"
       exit 2
     fi
 
@@ -401,7 +401,7 @@ main() {
     echo_var output_directory
 
     printf "\n# SVG\n"
-    echo_var input_svg
+    echo_var input
 
     printf "\n# PPT\n"
     echo_var ppt_name
@@ -494,7 +494,7 @@ update_preferences_from_input() {
 
   echo "output_directory=$output_directory
 template_ppt_filepath=$template_ppt_filepath
-input_svg=$input_svg
+input=$input
 ppt_name=$ppt_name
 force_ppt=$force_ppt
 where_to_open=$where_to_open" >$application_preferences_file_filepath
@@ -622,7 +622,7 @@ fi
 while getopts "f:i:o:p:t:w:dhqsvx" option; do
   case "${option}" in
     f) force_ppt=${OPTARG} ;;
-    i) input_svg=${OPTARG} ;;
+    i) input=${OPTARG} ;;
     o) output_directory=${OPTARG} ;;
     p) ppt_name=${OPTARG} ;;
     t) template_ppt=${OPTARG} ;;
@@ -642,7 +642,7 @@ if [ "$help" == true ]; then
   bldwhtund=$txtund$bldwht
   echo $bldwhtund"Flag$txtrst  "$bldwhtund"Name$txtrst              "$bldwhtund"Description"$txtrst
   echo "-q    quiet             Quiet mode to prevent output"
-  echo "-i    input_svg         Filepath of the SVG file to be converted"
+  echo "-i    input             Filepath of the SVG file to be converted or a directory with SVG files"
   echo "-t    template_ppt      Filepath of the template PPT"
   echo "-o    output_directory  Filepath of the directory where PPT files are output"
   echo "-p    ppt_name          The name of the PPT file that is output"
@@ -670,7 +670,7 @@ if [ "$debug" == true ]; then
   printf $bldcyn"\n~OUTPUT FOR DEBUGGING~\n\n"$txtrst
 
   printf $bldcyn"\n# INPUT\n"$txtrst
-  echo_var input_svg
+  echo_var input
   echo_var svg_name_with_ext
   echo_var svg_name
   echo_var svg_filepath
