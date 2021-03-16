@@ -5,12 +5,14 @@
 application_name=svgtoppt
 application_config_file=.$application_name
 application_config_file_filepath=~/$application_config_file
-application_preferences_file=.$application_name-preferences
+application_preferences_file=.$application_name-defaults
 application_preferences_file_filepath=~/$application_preferences_file
 
 # HELPFUL STRINGS
-svg_file_ext=.svg
-ppt_file_ext=.ppt
+svg_file_ext='.svg'
+ppt_file_ext='.ppt'
+file_uri_prefix='file://'
+quote_string='\&quot;'
 
 # TEXT FORMATS
 txtund=$(tput sgr 0 1) # Underline
@@ -46,16 +48,16 @@ print_text_options() {
 # print_text_options
 
 # EMOJIS
-brew="🍺"
-checkmark="✅"
-exclamation="❗️"
-libre="📄"
-octo="🐙"
-svg="🖌 "
-swirl="🌀"
-trash="🗑 "
-warn="⚠️ "
-x_mark="❌"
+brew='🍺'
+checkmark='✅'
+exclamation='❗️'
+libre='📄'
+octo='🐙'
+svg='🖌 '
+swirl='🌀'
+trash='🗑 '
+warn='⚠️ '
+x_mark='❌'
 
 # HELPER FUNCTIONS
 echo_bold() {
@@ -130,26 +132,32 @@ sed=$(find_path sed)
 
 main() {
   validate_inputs() {
-    # Check if SVG file exists
-    if test -f $first_parameter && [ ! -z $first_parameter ]; then
+    # Check if SVG file exists or if it's a directory
+    if [ ! -z "$first_parameter" ] && test -f $first_parameter; then
       svg_filepath=$first_parameter
     elif test -f $input_svg; then
       svg_filepath=$input_svg
     elif test -f $PWD/$input_svg; then
       svg_filepath=$PWD/$input_svg
+    elif [ ! -z "$first_parameter" ] && [ -d $first_parameter ]; then
+      svg_directory=$first_parameter
+    elif [ -d $input_svg ]; then
+      svg_directory=$input_svg
+    elif [ -d $PWD/$input_svg ]; then
+      svg_directory=$PWD/$input_svg
     else
-      echo_failed "find input SVG file: $input_svg"
+      echo_failed "find input file/directory: $input_svg"
       exit 2
     fi
 
     # Check if SVG extension is present
-    if [[ "$svg_filepath" != *"$svg_file_ext" ]]; then
+    if [[ ! -z "$svg_filepath" ]] && [[ "$svg_filepath" != *"$svg_file_ext" ]]; then
       echo_failed "find '$svg_file_ext' at the end of the input file: $bldwht$svg_filepath$txtrst"
       exit 2
     fi
 
     # If template PPT passed in, check if it exists
-    if [ ! -z $template_ppt ]; then
+    if [ ! -z "$template_ppt" ]; then
       if test -f $PWD/$template_ppt; then
         template_ppt_filepath=$PWD/$template_ppt
       elif test -f $template_ppt; then
@@ -178,13 +186,65 @@ main() {
         exit 2
         ;;
     esac
+
+    if [[ ! -z "$svg_filepath" ]]; then
+      # Set SVG flag-dependent defaults
+      local svg_name_with_ext=${svg_filepath##*/}
+      IFS='.' read -r svg_name string <<<"$svg_name_with_ext"
+
+      # Set PPT flag-dependent defaults
+      if [ -z "$ppt_name" ]; then
+        ppt_name=$svg_name
+      fi
+      ppt_filepath=$output_directory/$ppt_name$ppt_file_ext
+    elif [[ ! -z "$svg_directory" ]]; then
+      # echo_var svg_directory
+
+      local first=true
+      for i in "$svg_directory"/*
+      do
+        # echo $i
+        if [[ "$i" == *"$svg_file_ext" ]]; then
+          if [ "$first" == true ]; then
+            first=false
+          else
+            svg_filepaths="$svg_filepaths, "
+          fi
+
+          svg_filepaths="$svg_filepaths$quote_string$file_uri_prefix$i$quote_string"
+        # else
+        #   echo "Not an SVG: $i"
+        fi
+      done
+    fi
+
+    echo_var svg_filepaths
   }
 
   # Figures out the name of the PPT file based on $force_ppt and existing PPT files
   determine_ppt_name() {
+    if [[ ! -z "$svg_filepath" ]]; then
+      local svg_name_with_ext=${svg_filepath##*/}
+      IFS='.' read -r svg_name string <<<"$svg_name_with_ext"
+
+      # Set PPT flag-dependent defaults
+      if [ -z "$ppt_name" ]; then
+        ppt_name=$svg_name
+      fi
+    elif [[ ! -z "$svg_directory" ]]; then
+      local directory_name=${svg_directory##*/}
+
+      # Set PPT flag-dependent defaults
+      if [ -z "$ppt_name" ]; then
+        ppt_name=$directory_name
+      fi
+    fi
+
+    ppt_filepath=$output_directory/$ppt_name$ppt_file_ext
+
     if [ "$force_ppt" != true ] && [ -f $ppt_filepath ]; then
       while [ -f $ppt_filepath ]; do
-        if [ -z $ppt_name_suffix ]; then
+        if [ -z "$ppt_name_suffix" ]; then
           ppt_name_suffix=-1
         else
           ppt_name_suffix=$((ppt_name_suffix - 1))
@@ -217,9 +277,9 @@ main() {
       echo_var copy_file
     fi
 
-    if [ "$stop_creations" != true ]; then
+    # if [ "$stop_creations" != true ]; then
       eval $copy_file
-    fi
+    # fi
     local exit_code=$?
 
     # echo_breakpoint exit_code "$description" "copied" 1 0
@@ -236,7 +296,11 @@ main() {
   update_macro_with_svg() {
     local description="Libre Office macro"
 
-    local svg_sed="$sed -i '' \"s~SVG_FILEPATH~$svg_filepath~\" \"$libre_office_macro_filepath\""
+    if [ -z "$svg_filepaths" ]; then
+      svg_filepaths=$svg_filepath
+    fi
+
+    local svg_sed="$sed -i '' \"s|SVG_FILEPATHS|$svg_filepaths|\" \"$libre_office_macro_filepath\""
     if [ "$debug" == true ]; then
       echo_var svg_sed
     fi
@@ -354,17 +418,6 @@ main() {
   fi
 
   validate_inputs
-
-  # Set SVG flag-dependent defaults
-  local svg_name_with_ext=${svg_filepath##*/}
-  IFS='.' read -r svg_name string <<<"$svg_name_with_ext"
-
-  # Set PPT flag-dependent defaults
-  if [ -z $ppt_name ]; then
-    ppt_name=$svg_name
-  fi
-  ppt_filepath=$output_directory/$ppt_name$ppt_file_ext
-
   determine_ppt_name
 
   create_macro_from_template
@@ -374,7 +427,7 @@ main() {
   launch_libre_office_macro
 
   # Launch the new PPT file if where_to_open is defined
-  if [ ! -z $where_to_open ]; then
+  if [ ! -z "$where_to_open" ]; then
     open_ppt
   fi
 
