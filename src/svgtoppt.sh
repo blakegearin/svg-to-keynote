@@ -641,13 +641,13 @@ if [ "$help" == true ]; then
   echo
   bldwhtund=$txtund$bldwht
   echo $bldwhtund"Flag$txtrst  "$bldwhtund"Name$txtrst              "$bldwhtund"Description"$txtrst
-  echo "-q    quiet             Quiet mode to prevent output"
-  echo "-i    input             Filepath of the SVG file to be converted or a directory with SVG files"
+  echo "-i    input *required   Filepath of the SVG file to be converted or a directory with SVG files"
   echo "-t    template_ppt      Filepath of the template PPT"
   echo "-o    output_directory  Filepath of the directory where PPT files are output"
   echo "-p    ppt_name          The name of the PPT file that is output"
   echo "-f    force_ppt         Force use the ppt_name (introduces risk of overwriting a PPT file)"
   echo "-w    where_to_open     Where the PPT file is opened in after it's created"
+  echo "-q    quiet             Quiet mode to prevent output"
   echo
   echo $bldwht"Example:$txtrst svgtoppt -i ~/Desktop/logo.svg -t ~/Documents/blake_template.ppt -o ~/Desktop -p amazing_logo -f true -w none -q"
   echo
